@@ -1,4 +1,5 @@
 # CTMO_AutoDome
+This is the Arduino state machine and ASCOM Driver for the Arduino to control an observatory.
 
 # Break down of StateMachine.ino
 # _________________________________________
