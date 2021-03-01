@@ -87,9 +87,14 @@ namespace ASCOM.CTMODome
         private AstroUtils astroUtilities;
 
         /// <summary>
+        /// Serial connection to the Arduino
+        /// </summary>
+        private Serial serialConnection;
+
+        /// <summary>
         /// Variable to hold the trace logger object (creates a diagnostic log file with information that you specify)
         /// </summary>
-        internal TraceLogger tl;
+        internal static TraceLogger tl;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CTMODome"/> class.
@@ -106,6 +111,7 @@ namespace ASCOM.CTMODome
             utilities = new Util(); //Initialise util object
             astroUtilities = new AstroUtils(); // Initialise astro-utilities object
             //TODO: Implement your additional construction here
+            serialConnection = new Serial();
 
             tl.LogMessage("Dome", "Completed initialisation");
         }
@@ -160,8 +166,11 @@ namespace ASCOM.CTMODome
             CheckConnected("CommandBlind");
             // TODO The optional CommandBlind method should either be implemented OR throw a MethodNotImplementedException
             // If implemented, CommandBlind must send the supplied command to the mount and return immediately without waiting for a response
+            // Call CommandString and return as soon as it finishes
+            this.CommandString(command, raw);
 
-            throw new ASCOM.MethodNotImplementedException("CommandBlind");
+            // or
+            // throw new ASCOM.MethodNotImplementedException("CommandBlind");
         }
 
         public bool CommandBool(string command, bool raw)
@@ -174,7 +183,10 @@ namespace ASCOM.CTMODome
             // bool retBool = XXXXXXXXXXXXX; // Parse the returned string and create a boolean True / False value
             // return retBool; // Return the boolean value to the client
 
-            throw new ASCOM.MethodNotImplementedException("CommandBool");
+            string ret = ComandString(command, raw);
+            
+            // or
+            // throw new ASCOM.MethodNotImplementedException("CommandBool");
         }
 
         public string CommandString(string command, bool raw)
@@ -182,6 +194,11 @@ namespace ASCOM.CTMODome
             CheckConnected("CommandString");
             // TODO The optional CommandString method should either be implemented OR throw a MethodNotImplementedException
             // If implemented, CommandString must send the supplied command to the mount and wait for a response before returning this to the client
+
+            // It's a good idea to put all the low level communication with the device here,
+            // then all communication calls this function
+
+            // you need something to ensure that only one command is in progress at a time
 
             throw new ASCOM.MethodNotImplementedException("CommandString");
         }
@@ -216,12 +233,16 @@ namespace ASCOM.CTMODome
                     connectedState = true;
                     LogMessage("Connected Set", "Connecting to port {0}", comPort);
                     // TODO connect to the device
+                    serialConnection.PortName = comPort;
+                    serialConnection.Speed = SerialSpeed.ps9600;
+                    serialConnection.Connected = true;
                 }
                 else
                 {
                     connectedState = false;
                     LogMessage("Connected Set", "Disconnecting from port {0}", comPort);
                     // TODO disconnect from the device
+                    serialConnection.Connected = false;
                 }
             }
         }
@@ -322,8 +343,21 @@ namespace ASCOM.CTMODome
         {
             get
             {
-                tl.LogMessage("Azimuth Get", "Not implemented");
-                throw new ASCOM.PropertyNotImplementedException("Azimuth", false);
+                tl.LogMessage("Azimuth Get", "Retrieving Azimuth...");
+                double azimuth = 0.0;
+
+                // Send the command to the arduino that will tell it to reply with the position
+                serialConnection.Transmit("+G;");
+
+                // Wait for the response ending in ';' and starting with '#' to know that we have a valid response
+                string response = serialConnection.ReceiveTerminated(";");
+                if(response[0] == '#')
+                {
+                    azimuth = Convert.ToDouble(response.Substring(1, response.Length - 2));
+                }
+
+                return azimuth;
+                // throw new ASCOM.PropertyNotImplementedException("Azimuth", false);
             }
         }
 
@@ -331,8 +365,8 @@ namespace ASCOM.CTMODome
         {
             get
             {
-                tl.LogMessage("CanFindHome Get", false.ToString());
-                return false;
+                tl.LogMessage("CanFindHome Get", true.ToString());
+                return true;
             }
         }
 
@@ -340,8 +374,8 @@ namespace ASCOM.CTMODome
         {
             get
             {
-                tl.LogMessage("CanPark Get", false.ToString());
-                return false;
+                tl.LogMessage("CanPark Get", true.ToString());
+                return true;
             }
         }
 
@@ -358,8 +392,8 @@ namespace ASCOM.CTMODome
         {
             get
             {
-                tl.LogMessage("CanSetAzimuth Get", false.ToString());
-                return false;
+                tl.LogMessage("CanSetAzimuth Get", true.ToString());
+                return true;
             }
         }
 
@@ -376,8 +410,8 @@ namespace ASCOM.CTMODome
         {
             get
             {
-                tl.LogMessage("CanSetShutter Get", true.ToString());
-                return true;
+                tl.LogMessage("CanSetShutter Get", false.ToString());
+                return false;
             }
         }
 
@@ -401,8 +435,11 @@ namespace ASCOM.CTMODome
 
         public void CloseShutter()
         {
-            tl.LogMessage("CloseShutter", "Shutter has been closed");
-            domeShutterState = false;
+            tl.LogMessage("CloseShutter", "Not implemented");
+            throw new ASCOM.MethodNotImplementedException("CloseShutter");
+
+            // tl.LogMessage("CloseShutter", "Shutter has been closed");
+            // domeShutterState = false;
         }
 
         public void FindHome()
@@ -413,14 +450,17 @@ namespace ASCOM.CTMODome
 
         public void OpenShutter()
         {
-            tl.LogMessage("OpenShutter", "Shutter has been opened");
-            domeShutterState = true;
+            tl.LogMessage("OpenShutter", "Not implemented");
+            throw new ASCOM.MethodNotImplementedException("OpenShutter");
+
+            // tl.LogMessage("OpenShutter", "Shutter has been opened");
+            // domeShutterState = true;
         }
 
         public void Park()
         {
-            tl.LogMessage("Park", "Not implemented");
-            throw new ASCOM.MethodNotImplementedException("Park");
+            tl.LogMessage("Park", "Park - Finding Home");
+            FindHome();
         }
 
         public void SetPark()
@@ -469,8 +509,8 @@ namespace ASCOM.CTMODome
 
         public void SlewToAzimuth(double Azimuth)
         {
-            tl.LogMessage("SlewToAzimuth", "Not implemented");
-            throw new ASCOM.MethodNotImplementedException("SlewToAzimuth");
+            tl.LogMessage("SlewToAzimuth", "Slewing to Position...");
+            serialConnection.Transmit("+MA" + Convert.ToInt32(Azimuth) + ";");
         }
 
         public bool Slewing
