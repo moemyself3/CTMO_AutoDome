@@ -1,62 +1,55 @@
 //tabs=4
 // --------------------------------------------------------------------------------
-// TODO fill in this information for your driver, then remove this line!
 //
-// ASCOM Dome driver for CVTDome
+// ASCOM Dome driver for CTMODome
 //
-// Description:	Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam 
-//				nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam 
-//				erat, sed diam voluptua. At vero eos et accusam et justo duo 
-//				dolores et ea rebum. Stet clita kasd gubergren, no sea takimata 
-//				sanctus est Lorem ipsum dolor sit amet.
+// Description:	This driver is used to communicate with an Arduino to control 
+//              AC Motor drive through relays. The Arduino functions as a State Machine.
 //
-// Implements:	ASCOM Dome interface version: <To be completed by driver developer>
-// Author:		(XXX) Your N. Here <your@email.here>
+// Implements:	ASCOM Dome interface version: IDomeV2
+// Author:		(2021) Moises Castillo <moises.castillo01@utrgv.edu>
 //
 // Edit Log:
 //
 // Date			Who	Vers	Description
 // -----------	---	-----	-------------------------------------------------------
-// dd-mmm-yyyy	XXX	6.0.0	Initial edit, created from ASCOM driver template
+// 2021-02-21	MC	0.1.0 	Initial edit, created from ASCOM driver template
 // --------------------------------------------------------------------------------
 //
-
-
 // This is used to define code in the template that is specific to one class implementation
-// unused code canbe deleted and this definition removed.
+// unused code can be deleted and this definition removed.
 #define Dome
-
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text;
-using System.Runtime.InteropServices;
 
 using ASCOM;
 using ASCOM.Astrometry;
 using ASCOM.Astrometry.AstroUtils;
-using ASCOM.Utilities;
 using ASCOM.DeviceInterface;
-using System.Globalization;
+using ASCOM.Utilities;
+using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
+using System.Runtime.InteropServices;
+using System.Text;
 
-namespace ASCOM.CVTDome
+namespace ASCOM.CTMODome
 {
     //
-    // Your driver's DeviceID is ASCOM.CVTDome.Dome
+    // Your driver's DeviceID is ASCOM.CTMODome.Dome
     //
-    // The Guid attribute sets the CLSID for ASCOM.CVTDome.Dome
-    // The ClassInterface/None addribute prevents an empty interface called
-    // _CVTDome from being created and used as the [default] interface
+    // The Guid attribute sets the CLSID for ASCOM.CTMODome.Dome
+    // The ClassInterface/None attribute prevents an empty interface called
+    // _CTMODome from being created and used as the [default] interface
     //
     // TODO Replace the not implemented exceptions with code to implement the function or
     // throw the appropriate ASCOM exception.
     //
 
     /// <summary>
-    /// ASCOM Dome Driver for CVTDome.
+    /// ASCOM Dome Driver for CTMODome.
     /// </summary>
-    [Guid("257151c7-fa4c-45ec-b381-23495db65b50")]
+    [Guid("fc02c3fb-39b5-455b-9d3d-1408850fa0a2")]
     [ClassInterface(ClassInterfaceType.None)]
     public class Dome : IDomeV2
     {
@@ -64,19 +57,19 @@ namespace ASCOM.CVTDome
         /// ASCOM DeviceID (COM ProgID) for this driver.
         /// The DeviceID is used by ASCOM applications to load the driver at runtime.
         /// </summary>
-        internal static string driverID = "ASCOM.CVTDome.Dome";
+        internal static string driverID = "ASCOM.CTMODome.Dome";
         // TODO Change the descriptive string for your driver then remove this line
         /// <summary>
         /// Driver description that displays in the ASCOM Chooser.
         /// </summary>
-        private static string driverDescription = "CVTDome";
+        private static string driverDescription = "ASCOM Dome Driver for CTMODome.";
 
         internal static string comPortProfileName = "COM Port"; // Constants used for Profile persistence
         internal static string comPortDefault = "COM1";
         internal static string traceStateProfileName = "Trace Level";
         internal static string traceStateDefault = "false";
 
-        internal static string comPort; // Variables to hold the currrent device configuration
+        internal static string comPort; // Variables to hold the current device configuration
 
         /// <summary>
         /// Private variable to hold the connected state
@@ -94,31 +87,25 @@ namespace ASCOM.CVTDome
         private AstroUtils astroUtilities;
 
         /// <summary>
-        /// Serial connection to the Arduino
-        /// </summary>
-        private Serial serialConnection;
-
-        /// <summary>
         /// Variable to hold the trace logger object (creates a diagnostic log file with information that you specify)
         /// </summary>
-        internal static TraceLogger tl;
+        internal TraceLogger tl;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CVTDome"/> class.
+        /// Initializes a new instance of the <see cref="CTMODome"/> class.
         /// Must be public for COM registration.
         /// </summary>
         public Dome()
         {
-            tl = new TraceLogger("", "CVTDome");
+            tl = new TraceLogger("", "CTMODome");
             ReadProfile(); // Read device configuration from the ASCOM Profile store
 
             tl.LogMessage("Dome", "Starting initialisation");
 
             connectedState = false; // Initialise connected to false
             utilities = new Util(); //Initialise util object
-            astroUtilities = new AstroUtils(); // Initialise astro utilities object
+            astroUtilities = new AstroUtils(); // Initialise astro-utilities object
             //TODO: Implement your additional construction here
-            serialConnection = new Serial();
 
             tl.LogMessage("Dome", "Completed initialisation");
         }
@@ -143,7 +130,7 @@ namespace ASCOM.CVTDome
             if (IsConnected)
                 System.Windows.Forms.MessageBox.Show("Already connected, just press OK");
 
-            using (SetupDialogForm F = new SetupDialogForm())
+            using (SetupDialogForm F = new SetupDialogForm(tl))
             {
                 var result = F.ShowDialog();
                 if (result == System.Windows.Forms.DialogResult.OK)
@@ -171,36 +158,37 @@ namespace ASCOM.CVTDome
         public void CommandBlind(string command, bool raw)
         {
             CheckConnected("CommandBlind");
-            // Call CommandString and return as soon as it finishes
-            this.CommandString(command, raw);
-            // or
+            // TODO The optional CommandBlind method should either be implemented OR throw a MethodNotImplementedException
+            // If implemented, CommandBlind must send the supplied command to the mount and return immediately without waiting for a response
+
             throw new ASCOM.MethodNotImplementedException("CommandBlind");
-            // DO NOT have both these sections!  One or the other
         }
 
         public bool CommandBool(string command, bool raw)
         {
             CheckConnected("CommandBool");
-            string ret = CommandString(command, raw);
-            // TODO decode the return string and return true or false
-            // or
+            // TODO The optional CommandBool method should either be implemented OR throw a MethodNotImplementedException
+            // If implemented, CommandBool must send the supplied command to the mount, wait for a response and parse this to return a True or False value
+
+            // string retString = CommandString(command, raw); // Send the command and wait for the response
+            // bool retBool = XXXXXXXXXXXXX; // Parse the returned string and create a boolean True / False value
+            // return retBool; // Return the boolean value to the client
+
             throw new ASCOM.MethodNotImplementedException("CommandBool");
-            // DO NOT have both these sections!  One or the other
         }
 
         public string CommandString(string command, bool raw)
         {
             CheckConnected("CommandString");
-            // it's a good idea to put all the low level communication with the device here,
-            // then all communication calls this function
-            // you need something to ensure that only one command is in progress at a time
+            // TODO The optional CommandString method should either be implemented OR throw a MethodNotImplementedException
+            // If implemented, CommandString must send the supplied command to the mount and wait for a response before returning this to the client
 
             throw new ASCOM.MethodNotImplementedException("CommandString");
         }
 
         public void Dispose()
         {
-            // Clean up the tracelogger and util objects
+            // Clean up the trace logger and util objects
             tl.Enabled = false;
             tl.Dispose();
             tl = null;
@@ -228,16 +216,12 @@ namespace ASCOM.CVTDome
                     connectedState = true;
                     LogMessage("Connected Set", "Connecting to port {0}", comPort);
                     // TODO connect to the device
-                    serialConnection.PortName = comPort;
-                    serialConnection.Speed = SerialSpeed.ps9600;
-                    serialConnection.Connected = true;
                 }
                 else
                 {
                     connectedState = false;
                     LogMessage("Connected Set", "Disconnecting from port {0}", comPort);
                     // TODO disconnect from the device
-                    serialConnection.Connected = false;
                 }
             }
         }
@@ -299,6 +283,8 @@ namespace ASCOM.CVTDome
 
         #region IDome Implementation
 
+        private bool domeShutterState = false; // Variable to hold the open/closed status of the shutter, true = Open
+
         public void AbortSlew()
         {
             // This is a mandatory parameter but we have no action to take in this simple driver
@@ -336,20 +322,8 @@ namespace ASCOM.CVTDome
         {
             get
             {
-                tl.LogMessage("Azimuth Get", "Retrieving Azimuth...");
-                double azimuth = 0.0;
-
-                // Send the command to the arduino that will tell it to reply with the position
-                serialConnection.Transmit("+G;");
-
-                // Wait for the response ending in ';' and starting with '#' to know that we have a valid response
-                string response = serialConnection.ReceiveTerminated(";");
-                if(response[0] == '#')
-                {
-                    azimuth = Convert.ToDouble(response.Substring(1, response.Length - 2));
-                }
-
-                return azimuth;
+                tl.LogMessage("Azimuth Get", "Not implemented");
+                throw new ASCOM.PropertyNotImplementedException("Azimuth", false);
             }
         }
 
@@ -357,8 +331,8 @@ namespace ASCOM.CVTDome
         {
             get
             {
-                tl.LogMessage("CanFindHome Get", true.ToString());
-                return true;
+                tl.LogMessage("CanFindHome Get", false.ToString());
+                return false;
             }
         }
 
@@ -366,8 +340,8 @@ namespace ASCOM.CVTDome
         {
             get
             {
-                tl.LogMessage("CanPark Get", true.ToString());
-                return true;
+                tl.LogMessage("CanPark Get", false.ToString());
+                return false;
             }
         }
 
@@ -384,8 +358,8 @@ namespace ASCOM.CVTDome
         {
             get
             {
-                tl.LogMessage("CanSetAzimuth Get", true.ToString());
-                return true;
+                tl.LogMessage("CanSetAzimuth Get", false.ToString());
+                return false;
             }
         }
 
@@ -402,8 +376,8 @@ namespace ASCOM.CVTDome
         {
             get
             {
-                tl.LogMessage("CanSetShutter Get", false.ToString());
-                return false;
+                tl.LogMessage("CanSetShutter Get", true.ToString());
+                return true;
             }
         }
 
@@ -427,8 +401,8 @@ namespace ASCOM.CVTDome
 
         public void CloseShutter()
         {
-            tl.LogMessage("CloseShutter", "Not implemented");
-            throw new ASCOM.MethodNotImplementedException("CloseShutter");
+            tl.LogMessage("CloseShutter", "Shutter has been closed");
+            domeShutterState = false;
         }
 
         public void FindHome()
@@ -439,14 +413,14 @@ namespace ASCOM.CVTDome
 
         public void OpenShutter()
         {
-            tl.LogMessage("OpenShutter", "Not Implemented");
-            throw new ASCOM.MethodNotImplementedException("OpenShutter");
+            tl.LogMessage("OpenShutter", "Shutter has been opened");
+            domeShutterState = true;
         }
 
         public void Park()
         {
-            tl.LogMessage("Park", "Park - Finding Home");
-            FindHome();
+            tl.LogMessage("Park", "Not implemented");
+            throw new ASCOM.MethodNotImplementedException("Park");
         }
 
         public void SetPark()
@@ -460,7 +434,16 @@ namespace ASCOM.CVTDome
             get
             {
                 tl.LogMessage("ShutterStatus Get", false.ToString());
-                return ShutterState.shutterError;
+                if (domeShutterState)
+                {
+                    tl.LogMessage("ShutterStatus", ShutterState.shutterOpen.ToString());
+                    return ShutterState.shutterOpen;
+                }
+                else
+                {
+                    tl.LogMessage("ShutterStatus", ShutterState.shutterClosed.ToString());
+                    return ShutterState.shutterClosed;
+                }
             }
         }
 
@@ -486,9 +469,8 @@ namespace ASCOM.CVTDome
 
         public void SlewToAzimuth(double Azimuth)
         {
-            tl.LogMessage("SlewToAzimuth", "Slewing to Position...");
-            serialConnection.Transmit("+MA" + Convert.ToInt32(Azimuth) + ";");
-
+            tl.LogMessage("SlewToAzimuth", "Not implemented");
+            throw new ASCOM.MethodNotImplementedException("SlewToAzimuth");
         }
 
         public bool Slewing
@@ -642,7 +624,7 @@ namespace ASCOM.CVTDome
         /// <param name="identifier"></param>
         /// <param name="message"></param>
         /// <param name="args"></param>
-        internal static void LogMessage(string identifier, string message, params object[] args)
+        internal void LogMessage(string identifier, string message, params object[] args)
         {
             var msg = string.Format(message, args);
             tl.LogMessage(identifier, msg);
