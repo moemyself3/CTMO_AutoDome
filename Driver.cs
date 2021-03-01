@@ -7,7 +7,8 @@
 //              AC Motor drive through relays. The Arduino functions as a State Machine.
 //
 // Implements:	ASCOM Dome interface version: IDomeV2
-// Author:		(2021) Moises Castillo <moises.castillo01@utrgv.edu>
+// Authors:		(2021) Moises Castillo <moises.castillo01@utrgv.edu>
+//                     Latifah Maasarani <LatifahM@knights.ucf.edu>
 //
 // Edit Log:
 //

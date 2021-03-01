@@ -197,7 +197,7 @@ void handleMovementCommand(char* commandBuffer)
     case 'A':
     {
      isRelativeMovement = false;
-     Serial.println("I am in case A mudafucka"); 
+     Serial.println("I am in case A"); 
      break;
     }
     case 'R':
@@ -213,7 +213,11 @@ void handleMovementCommand(char* commandBuffer)
   Serial.println(moveDegrees);
 }
 
-The handleMovement function passes a char variable and is used in a switch statement. If the commandBuffer[2] equals A the string, and I quote “ “I am in case A mudafucka” “ prints to the serial port and sets isRelativeMovement to false. If the commandBuffer[2] equals R, isRelativeMovement is set to true and prints “I am in case R” to the serial port. After the switch statement moveDegrees is set to the conversion of &commandInfo.bufferData[3] string to an integer. Then prints the string “Degrees needed to move: “ and the moveDegrees  integer to the serial port.
+The handleMovement function passes a char variable and is used in a switch statement.
+If the commandBuffer[2] equals A the string, and I quote “ “I am in case A” “ prints to the serial port and sets isRelativeMovement to false.
+If the commandBuffer[2] equals R, isRelativeMovement is set to true and prints “I am in case R” to the serial port. 
+After the switch statement moveDegrees is set to the conversion of &commandInfo.bufferData[3] string to an integer. 
+Then prints the string “Degrees needed to move: “ and the moveDegrees  integer to the serial port.
 
 void handleGetPositionCommand();
 void handleGetPositionCommand()
